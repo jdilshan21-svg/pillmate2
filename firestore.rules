@@ -1,0 +1,41 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // Users collection - users can only read/write their own profile
+    match /users/{uid} {
+      allow read, write: if request.auth != null && request.auth.uid == uid;
+    }
+
+    // Apps collection - public read access for global configs/feature flags
+    match /apps/{appId} {
+      allow read: if true; // Public configs
+      allow write: if false; // Only admin can write (handled server-side)
+    }
+
+    // Devices collection - users can only access devices they own
+    match /devices/{deviceId} {
+      allow read, write: if request.auth != null && 
+        request.auth.uid == resource.data.ownerUid;
+      
+      // Device schedules subcollection - inherit parent device permissions
+      match /schedules/{slotId} {
+        allow read, write: if request.auth != null && 
+          request.auth.uid == get(/databases/$(database)/documents/devices/$(deviceId)).data.ownerUid;
+      }
+    }
+
+    // Helper functions for future use
+    function isAuthenticated() {
+      return request.auth != null;
+    }
+    
+    function isOwner(uid) {
+      return request.auth != null && request.auth.uid == uid;
+    }
+    
+    function isDeviceOwner(deviceId) {
+      return request.auth != null && 
+        request.auth.uid == get(/databases/$(database)/documents/devices/$(deviceId)).data.ownerUid;
+    }
+  }
+}

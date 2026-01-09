@@ -1,0 +1,28 @@
+{
+  "rules": {
+    "devices": {
+      "$deviceId": {
+        "state": {
+          ".read": "auth != null && root.child('devices').child($deviceId).child('ownerUid').val() == auth.uid",
+          ".write": "auth != null && root.child('devices').child($deviceId).child('ownerUid').val() == auth.uid"
+        },
+        "dispenseCommands": {
+          "$commandId": {
+            ".read": "auth != null && root.child('devices').child($deviceId).child('ownerUid').val() == auth.uid",
+            ".write": "auth != null && root.child('devices').child($deviceId).child('ownerUid').val() == auth.uid && newData.child('issuedBy').val() == auth.uid"
+          }
+        },
+        "telemetry": {
+          "$eventId": {
+            ".read": "auth != null && root.child('devices').child($deviceId).child('ownerUid').val() == auth.uid",
+            ".write": false
+          }
+        },
+        "ownerUid": {
+          ".read": true,
+          ".write": false
+        }
+      }
+    }
+  }
+}
